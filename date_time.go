@@ -30,7 +30,7 @@ func (t *DateTime) Scan(value interface{}) error {
 		t.Valid = false
 		return nil
 	default:
-		err = fmt.Errorf("null: cannot scan type %T into null.Time: %v", value, value)
+		err = fmt.Errorf("std: cannot scan type %T into std.DateTime: %v", value, value)
 	}
 
 	t.Valid = err == nil
@@ -85,10 +85,7 @@ func (t DateTime) MarshalJSON() ([]byte, error) {
 		return nullType, nil
 	}
 
-	b, err := t.MarshalText()
-	if err != nil {
-		return b, err
-	}
+	b, _ := t.MarshalText()
 
 	if reflect.DeepEqual(b, nullType) {
 		return nullType, nil

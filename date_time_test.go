@@ -75,8 +75,13 @@ func TestUnmarshalDateTimeText(t *testing.T) {
 }
 
 func TestMarshalDateTime(t *testing.T) {
+	dt := DateTime{}
+	data, err := json.Marshal(dt)
+	maybePanic(err)
+	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
+
 	ti := DateTimeFrom(dateTimeValue)
-	data, err := json.Marshal(ti)
+	data, err = json.Marshal(ti)
 	maybePanic(err)
 	assertJSONEquals(t, data, string(dateTimeJSON), "non-empty json marshal")
 
