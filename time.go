@@ -100,6 +100,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+// MarshalText implements TextMarshaler
 func (t Time) MarshalText() ([]byte, error) {
 	if !t.Valid {
 		return []byte("null"), nil
@@ -107,6 +108,7 @@ func (t Time) MarshalText() ([]byte, error) {
 	return t.Time.MarshalText()
 }
 
+// UnmarshalText implements TextUnmarshaler
 func (t *Time) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
