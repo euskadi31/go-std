@@ -14,6 +14,7 @@ var nullType = []byte("null")
 
 // DateTime is a nullable time.Time with ISO8601 format. It supports SQL and JSON serialization.
 // It will marshal to null if null.
+// swagger:strfmt date-time
 type DateTime struct {
 	Time  time.Time
 	Valid bool
