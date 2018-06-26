@@ -22,6 +22,7 @@ Types
 - `std.Int`: Nullable int64
 - `std.Time`: Nullable Time
 - `std.DateTime`: Nullable Time with ISO8601 format
+- `std.Date`: Nullable Time with ISO8601 (yyyy-mm-dd) format
 
 
 License
