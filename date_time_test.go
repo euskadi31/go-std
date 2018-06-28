@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -17,12 +19,12 @@ var (
 func TestUnmarshalDateTimeJSON(t *testing.T) {
 	var ti DateTime
 	err := json.Unmarshal(dateTimeJSON, &ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDateTime(t, ti, "UnmarshalJSON() json")
 
 	var null DateTime
 	err = json.Unmarshal(nullDateTimeJSON, &null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDateTime(t, null, "null time json")
 
 	var invalid DateTime
@@ -50,20 +52,20 @@ func TestUnmarshalDateTimeJSON(t *testing.T) {
 func TestUnmarshalDateTimeText(t *testing.T) {
 	ti := DateTimeFrom(dateTimeValue)
 	txt, err := ti.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, dateTimeString, "marshal text")
 
 	var unmarshal DateTime
 	err = unmarshal.UnmarshalText(txt)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDateTime(t, unmarshal, "unmarshal text")
 
 	var null DateTime
 	err = null.UnmarshalText(nullDateTimeJSON)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDateTime(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, string(nullDateTimeJSON), "marshal null text")
 
 	var invalid DateTime
@@ -77,17 +79,17 @@ func TestUnmarshalDateTimeText(t *testing.T) {
 func TestMarshalDateTime(t *testing.T) {
 	dt := DateTime{}
 	data, err := json.Marshal(dt)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
 
 	ti := DateTimeFrom(dateTimeValue)
 	data, err = json.Marshal(ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(dateTimeJSON), "non-empty json marshal")
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
 }
 
@@ -130,7 +132,7 @@ func TestDateTimePointer(t *testing.T) {
 func TestDateTimeScanValue(t *testing.T) {
 	var ti DateTime
 	err := ti.Scan(dateTimeValue)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDateTime(t, ti, "scanned time")
 	if v, err := ti.Value(); v != dateTimeValue || err != nil {
 		t.Error("bad value or err:", v, err)
@@ -138,7 +140,7 @@ func TestDateTimeScanValue(t *testing.T) {
 
 	var null DateTime
 	err = null.Scan(nil)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDateTime(t, null, "scanned null")
 	if v, err := null.Value(); v != nil || err != nil {
 		t.Error("bad value or err:", v, err)

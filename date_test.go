@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -17,12 +19,12 @@ var (
 func TestUnmarshalDateJSON(t *testing.T) {
 	var ti Date
 	err := json.Unmarshal(dateJSON, &ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDate(t, ti, "UnmarshalJSON() json")
 
 	var null Date
 	err = json.Unmarshal(nullDateJSON, &null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDate(t, null, "null time json")
 
 	var invalid Date
@@ -50,20 +52,20 @@ func TestUnmarshalDateJSON(t *testing.T) {
 func TestUnmarshalDateText(t *testing.T) {
 	ti := DateFrom(dateValue)
 	txt, err := ti.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, dateString, "marshal text")
 
 	var unmarshal Date
 	err = unmarshal.UnmarshalText(txt)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDate(t, unmarshal, "unmarshal text")
 
 	var null Date
 	err = null.UnmarshalText(nullDateJSON)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDate(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, string(nullDateJSON), "marshal null text")
 
 	var invalid Date
@@ -77,17 +79,17 @@ func TestUnmarshalDateText(t *testing.T) {
 func TestMarshalDate(t *testing.T) {
 	dt := Date{}
 	data, err := json.Marshal(dt)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(nullDateJSON), "null json marshal")
 
 	ti := DateFrom(dateValue)
 	data, err = json.Marshal(ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(dateJSON), "non-empty json marshal")
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(nullDateJSON), "null json marshal")
 }
 
@@ -130,7 +132,7 @@ func TestDatePointer(t *testing.T) {
 func TestDateScanValue(t *testing.T) {
 	var ti Date
 	err := ti.Scan(dateValue)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDate(t, ti, "scanned time")
 	if v, err := ti.Value(); v != dateValue || err != nil {
 		t.Error("bad value or err:", v, err)
@@ -138,7 +140,7 @@ func TestDateScanValue(t *testing.T) {
 
 	var null Date
 	err = null.Scan(nil)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDate(t, null, "scanned null")
 	if v, err := null.Value(); v != nil || err != nil {
 		t.Error("bad value or err:", v, err)

@@ -5,6 +5,8 @@ import (
 	"math"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -35,17 +37,17 @@ func TestIntFromPtr(t *testing.T) {
 func TestUnmarshalInt(t *testing.T) {
 	var i Int
 	err := json.Unmarshal(intJSON, &i)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertInt(t, i, "int json")
 
 	var ni Int
 	err = json.Unmarshal(nullIntJSON, &ni)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertInt(t, ni, "sq.NullInt64 json")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullInt(t, null, "null json")
 
 	var badType Int
@@ -77,7 +79,7 @@ func TestUnmarshalInt64Overflow(t *testing.T) {
 	// Max int64 should decode successfully
 	var i Int
 	err := json.Unmarshal([]byte(strconv.FormatUint(int64Overflow, 10)), &i)
-	maybePanic(err)
+	assert.NoError(t, err)
 
 	// Attempt to overflow
 	int64Overflow++
@@ -90,43 +92,43 @@ func TestUnmarshalInt64Overflow(t *testing.T) {
 func TestTextUnmarshalInt(t *testing.T) {
 	var i Int
 	err := i.UnmarshalText([]byte("12345"))
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertInt(t, i, "UnmarshalText() int")
 
 	var blank Int
 	err = blank.UnmarshalText([]byte(""))
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullInt(t, blank, "UnmarshalText() empty int")
 
 	var null Int
 	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullInt(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalInt(t *testing.T) {
 	i := IntFrom(12345)
 	data, err := json.Marshal(i)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "12345", "non-empty json marshal")
 
 	// invalid values should be encoded as null
 	null := NewInt(0, false)
 	data, err = json.Marshal(null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "null", "null json marshal")
 }
 
 func TestMarshalIntText(t *testing.T) {
 	i := IntFrom(12345)
 	data, err := i.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "12345", "non-empty text marshal")
 
 	// invalid values should be encoded as null
 	null := NewInt(0, false)
 	data, err = null.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "", "null text marshal")
 }
 
@@ -171,12 +173,12 @@ func TestIntSetValid(t *testing.T) {
 func TestIntScan(t *testing.T) {
 	var i Int
 	err := i.Scan(12345)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertInt(t, i, "scanned int")
 
 	var null Int
 	err = null.Scan(nil)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullInt(t, null, "scanned null")
 }
 

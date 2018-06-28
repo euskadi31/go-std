@@ -11,7 +11,8 @@ Go Standard Library ![Last release](https://img.shields.io/github/release/euskad
 
 go-std is a library with reasonable options for dealing with nullable SQL and JSON values.
 
-All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`. All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, and `json.Unmarshaler`.
+All types implement `sql.Scanner` and `driver.Valuer`, so you can use this library in place of `sql.NullXXX`.
+All types also implement: `encoding.TextMarshaler`, `encoding.TextUnmarshaler`, `json.Marshaler`, `json.Unmarshaler` and `fmt.Stringer`.
 
 Types
 -----

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -19,22 +21,22 @@ var (
 func TestUnmarshalTimeJSON(t *testing.T) {
 	var ti Time
 	err := json.Unmarshal(timeJSON, &ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertTime(t, ti, "UnmarshalJSON() json")
 
 	var null Time
 	err = json.Unmarshal(nullTimeJSON, &null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullTime(t, null, "null time json")
 
 	var fromObject Time
 	err = json.Unmarshal(timeObject, &fromObject)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertTime(t, fromObject, "time from object json")
 
 	var nullFromObj Time
 	err = json.Unmarshal(nullObject, &nullFromObj)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullTime(t, nullFromObj, "null from object json")
 
 	var invalid Time
@@ -62,20 +64,20 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 func TestUnmarshalTimeText(t *testing.T) {
 	ti := TimeFrom(timeValue)
 	txt, err := ti.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, timeString, "marshal text")
 
 	var unmarshal Time
 	err = unmarshal.UnmarshalText(txt)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertTime(t, unmarshal, "unmarshal text")
 
 	var null Time
 	err = null.UnmarshalText(nullJSON)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullTime(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, string(nullJSON), "marshal null text")
 
 	var invalid Time
@@ -89,12 +91,12 @@ func TestUnmarshalTimeText(t *testing.T) {
 func TestMarshalTime(t *testing.T) {
 	ti := TimeFrom(timeValue)
 	data, err := json.Marshal(ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(timeJSON), "non-empty json marshal")
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, string(nullJSON), "null json marshal")
 }
 
@@ -137,7 +139,7 @@ func TestTimePointer(t *testing.T) {
 func TestTimeScanValue(t *testing.T) {
 	var ti Time
 	err := ti.Scan(timeValue)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertTime(t, ti, "scanned time")
 	if v, err := ti.Value(); v != timeValue || err != nil {
 		t.Error("bad value or err:", v, err)
@@ -145,7 +147,7 @@ func TestTimeScanValue(t *testing.T) {
 
 	var null Time
 	err = null.Scan(nil)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullTime(t, null, "scanned null")
 	if v, err := null.Value(); v != nil || err != nil {
 		t.Error("bad value or err:", v, err)
