@@ -53,7 +53,7 @@ func TestUnmarshalDateText(t *testing.T) {
 	ti := DateFrom(dateValue)
 	txt, err := ti.MarshalText()
 	assert.NoError(t, err)
-	assertJSONEquals(t, txt, dateString, "marshal text")
+	assert.Equal(t, dateString, string(txt))
 
 	var unmarshal Date
 	err = unmarshal.UnmarshalText(txt)
@@ -63,10 +63,11 @@ func TestUnmarshalDateText(t *testing.T) {
 	var null Date
 	err = null.UnmarshalText(nullDateJSON)
 	assert.NoError(t, err)
+
 	assertNullDate(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
 	assert.NoError(t, err)
-	assertJSONEquals(t, txt, string(nullDateJSON), "marshal null text")
+	assert.Equal(t, []byte{}, txt)
 
 	var invalid Date
 	err = invalid.UnmarshalText([]byte("hello world"))
@@ -154,9 +155,31 @@ func TestDateScanValue(t *testing.T) {
 	assertNullDate(t, wrong, "scanned wrong")
 }
 
+func TestDateString(t *testing.T) {
+	dt := DateFrom(dateValue)
+	assert.Equal(t, "2012-12-21", dt.String())
+
+	null := Date{}
+	assert.Equal(t, "", null.String())
+}
+
+func TestDateIsZero(t *testing.T) {
+	dt := DateFrom(dateValue)
+	assert.False(t, dt.IsZero())
+
+	blank := Date{}
+	assert.True(t, blank.IsZero())
+
+	empty := NewDate(time.Time{}, true)
+	assert.False(t, empty.IsZero())
+
+	null := DateFromPtr(nil)
+	assert.True(t, null.IsZero())
+}
+
 func assertDate(t *testing.T, ti Date, from string) {
-	if !ti.Time.Equal(dateValue) {
-		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, dateValue)
+	if !ti.Data.Equal(dateValue) {
+		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Data, dateValue)
 	}
 	if !ti.Valid {
 		t.Error(from, "is invalid, but should be valid")
