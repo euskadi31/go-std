@@ -66,7 +66,7 @@ func TestUnmarshalDateTimeText(t *testing.T) {
 	assertNullDateTime(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
 	assert.NoError(t, err)
-	assertJSONEquals(t, txt, string(nullDateTimeJSON), "marshal null text")
+	assert.Equal(t, []byte{}, txt)
 
 	var invalid DateTime
 	err = invalid.UnmarshalText([]byte("hello world"))
@@ -80,17 +80,17 @@ func TestMarshalDateTime(t *testing.T) {
 	dt := DateTime{}
 	data, err := json.Marshal(dt)
 	assert.NoError(t, err)
-	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
+	assert.JSONEq(t, `null`, string(data))
 
 	ti := DateTimeFrom(dateTimeValue)
 	data, err = json.Marshal(ti)
 	assert.NoError(t, err)
-	assertJSONEquals(t, data, string(dateTimeJSON), "non-empty json marshal")
+	assert.JSONEq(t, string(dateTimeJSON), string(data))
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)
 	assert.NoError(t, err)
-	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
+	assert.JSONEq(t, `null`, string(data))
 }
 
 func TestDateTimeFrom(t *testing.T) {
@@ -154,9 +154,31 @@ func TestDateTimeScanValue(t *testing.T) {
 	assertNullDateTime(t, wrong, "scanned wrong")
 }
 
+func TestDateTimeString(t *testing.T) {
+	dt := DateTimeFrom(dateTimeValue)
+	assert.Equal(t, "2012-12-21T21:21:21+0000", dt.String())
+
+	null := DateTime{}
+	assert.Equal(t, "", null.String())
+}
+
+func TestDateTimeIsZero(t *testing.T) {
+	dt := DateTimeFrom(dateTimeValue)
+	assert.False(t, dt.IsZero())
+
+	blank := DateTime{}
+	assert.True(t, blank.IsZero())
+
+	empty := NewDateTime(time.Time{}, true)
+	assert.False(t, empty.IsZero())
+
+	null := DateTimeFromPtr(nil)
+	assert.True(t, null.IsZero())
+}
+
 func assertDateTime(t *testing.T, ti DateTime, from string) {
-	if !ti.Time.Equal(dateTimeValue) {
-		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, dateTimeValue)
+	if !ti.Data.Equal(dateTimeValue) {
+		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Data, dateTimeValue)
 	}
 	if !ti.Valid {
 		t.Error(from, "is invalid, but should be valid")
