@@ -10,8 +10,7 @@ import (
 )
 
 var (
-	intJSON     = []byte(`12345`)
-	nullIntJSON = []byte(`{"Int64":12345,"Valid":true}`)
+	intJSON = []byte(`12345`)
 )
 
 func TestIntFrom(t *testing.T) {
@@ -39,11 +38,6 @@ func TestUnmarshalInt(t *testing.T) {
 	err := json.Unmarshal(intJSON, &i)
 	assert.NoError(t, err)
 	assertInt(t, i, "int json")
-
-	var ni Int
-	err = json.Unmarshal(nullIntJSON, &ni)
-	assert.NoError(t, err)
-	assertInt(t, ni, "sq.NullInt64 json")
 
 	var null Int
 	err = json.Unmarshal(nullJSON, &null)
@@ -182,9 +176,31 @@ func TestIntScan(t *testing.T) {
 	assertNullInt(t, null, "scanned null")
 }
 
+func TestIntString(t *testing.T) {
+	i := IntFrom(12345)
+	assert.Equal(t, "12345", i.String())
+
+	null := Int{}
+	assert.Equal(t, "", null.String())
+}
+
+func TestIntValue(t *testing.T) {
+	i := IntFrom(12345)
+
+	v, err := i.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, int64(12345), v.(int64))
+
+	null := Int{}
+
+	v, err = null.Value()
+	assert.NoError(t, err)
+	assert.Nil(t, v)
+}
+
 func assertInt(t *testing.T, i Int, from string) {
-	if i.Int64 != 12345 {
-		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Int64, 12345)
+	if i.Data != 12345 {
+		t.Errorf("bad %s int: %d ≠ %d\n", from, i.Data, 12345)
 	}
 	if !i.Valid {
 		t.Error(from, "is invalid, but should be valid")
