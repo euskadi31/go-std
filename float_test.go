@@ -38,11 +38,6 @@ func TestUnmarshalFloat(t *testing.T) {
 	assert.NoError(t, err)
 	assertFloat(t, f, "float json")
 
-	var nf Float
-	err = json.Unmarshal(nullFloatJSON, &nf)
-	assert.NoError(t, err)
-	assertFloat(t, nf, "sq.NullFloat64 json")
-
 	var null Float
 	err = json.Unmarshal(nullJSON, &null)
 	assert.NoError(t, err)
@@ -155,9 +150,31 @@ func TestFloatScan(t *testing.T) {
 	assertNullFloat(t, null, "scanned null")
 }
 
+func TestFloatString(t *testing.T) {
+	f := FloatFrom(1.2345)
+	assert.Equal(t, "1.2345", f.String())
+
+	null := Float{}
+	assert.Equal(t, "", null.String())
+}
+
+func TestFloatValue(t *testing.T) {
+	i := FloatFrom(1.2345)
+
+	v, err := i.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1.2345), v.(float64))
+
+	null := Float{}
+
+	v, err = null.Value()
+	assert.NoError(t, err)
+	assert.Nil(t, v)
+}
+
 func assertFloat(t *testing.T, f Float, from string) {
-	if f.Float64 != 1.2345 {
-		t.Errorf("bad %s float: %f ≠ %f\n", from, f.Float64, 1.2345)
+	if f.Data != 1.2345 {
+		t.Errorf("bad %s float: %f ≠ %f\n", from, f.Data, 1.2345)
 	}
 	if !f.Valid {
 		t.Error(from, "is invalid, but should be valid")
