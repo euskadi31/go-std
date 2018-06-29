@@ -9,11 +9,10 @@ import (
 )
 
 var (
-	dateTimeString    = "2012-12-21T21:21:21+0000"
-	dateTimeJSON      = []byte(`"` + dateTimeString + `"`)
-	nullDateTimeJSON  = []byte(`null`)
-	dateTimeValue, _  = time.Parse(dateTimeFormat, dateTimeString)
-	badDateTimeObject = []byte(`{"hello": "world"}`)
+	dateTimeString   = "2012-12-21T21:21:21+0000"
+	dateTimeJSON     = []byte(`"` + dateTimeString + `"`)
+	nullDateTimeJSON = []byte(`null`)
+	dateTimeValue, _ = time.Parse(dateTimeFormat, dateTimeString)
 )
 
 func TestUnmarshalDateTimeJSON(t *testing.T) {
