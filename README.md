@@ -6,7 +6,6 @@ Go Standard Library ![Last release](https://img.shields.io/github/release/euskad
 | Branch  | Status | Coverage |
 |---------|--------|----------|
 | master  | [![Build Status](https://img.shields.io/travis/euskadi31/go-std/master.svg)](https://travis-ci.org/euskadi31/go-std) | [![Coveralls](https://img.shields.io/coveralls/euskadi31/go-std/master.svg)](https://coveralls.io/github/euskadi31/go-std?branch=master) |
-| develop | [![Build Status](https://img.shields.io/travis/euskadi31/go-std/develop.svg)](https://travis-ci.org/euskadi31/go-std) | [![Coveralls](https://img.shields.io/coveralls/euskadi31/go-std/develop.svg)](https://coveralls.io/github/euskadi31/go-std?branch=develop) |
 
 
 go-std is a library with reasonable options for dealing with nullable SQL and JSON values.
