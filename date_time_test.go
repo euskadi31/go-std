@@ -4,25 +4,26 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
-	dateTimeString    = "2012-12-21T21:21:21+0000"
-	dateTimeJSON      = []byte(`"` + dateTimeString + `"`)
-	nullDateTimeJSON  = []byte(`null`)
-	dateTimeValue, _  = time.Parse(dateTimeFormat, dateTimeString)
-	badDateTimeObject = []byte(`{"hello": "world"}`)
+	dateTimeString   = "2012-12-21T21:21:21+0000"
+	dateTimeJSON     = []byte(`"` + dateTimeString + `"`)
+	nullDateTimeJSON = []byte(`null`)
+	dateTimeValue, _ = time.Parse(dateTimeFormat, dateTimeString)
 )
 
 func TestUnmarshalDateTimeJSON(t *testing.T) {
 	var ti DateTime
 	err := json.Unmarshal(dateTimeJSON, &ti)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDateTime(t, ti, "UnmarshalJSON() json")
 
 	var null DateTime
 	err = json.Unmarshal(nullDateTimeJSON, &null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDateTime(t, null, "null time json")
 
 	var invalid DateTime
@@ -50,21 +51,21 @@ func TestUnmarshalDateTimeJSON(t *testing.T) {
 func TestUnmarshalDateTimeText(t *testing.T) {
 	ti := DateTimeFrom(dateTimeValue)
 	txt, err := ti.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, txt, dateTimeString, "marshal text")
 
 	var unmarshal DateTime
 	err = unmarshal.UnmarshalText(txt)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDateTime(t, unmarshal, "unmarshal text")
 
 	var null DateTime
 	err = null.UnmarshalText(nullDateTimeJSON)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDateTime(t, null, "unmarshal null text")
 	txt, err = null.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, txt, string(nullDateTimeJSON), "marshal null text")
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{}, txt)
 
 	var invalid DateTime
 	err = invalid.UnmarshalText([]byte("hello world"))
@@ -77,18 +78,18 @@ func TestUnmarshalDateTimeText(t *testing.T) {
 func TestMarshalDateTime(t *testing.T) {
 	dt := DateTime{}
 	data, err := json.Marshal(dt)
-	maybePanic(err)
-	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
+	assert.NoError(t, err)
+	assert.JSONEq(t, `null`, string(data))
 
 	ti := DateTimeFrom(dateTimeValue)
 	data, err = json.Marshal(ti)
-	maybePanic(err)
-	assertJSONEquals(t, data, string(dateTimeJSON), "non-empty json marshal")
+	assert.NoError(t, err)
+	assert.JSONEq(t, string(dateTimeJSON), string(data))
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)
-	maybePanic(err)
-	assertJSONEquals(t, data, string(nullDateTimeJSON), "null json marshal")
+	assert.NoError(t, err)
+	assert.JSONEq(t, `null`, string(data))
 }
 
 func TestDateTimeFrom(t *testing.T) {
@@ -130,7 +131,7 @@ func TestDateTimePointer(t *testing.T) {
 func TestDateTimeScanValue(t *testing.T) {
 	var ti DateTime
 	err := ti.Scan(dateTimeValue)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertDateTime(t, ti, "scanned time")
 	if v, err := ti.Value(); v != dateTimeValue || err != nil {
 		t.Error("bad value or err:", v, err)
@@ -138,7 +139,7 @@ func TestDateTimeScanValue(t *testing.T) {
 
 	var null DateTime
 	err = null.Scan(nil)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullDateTime(t, null, "scanned null")
 	if v, err := null.Value(); v != nil || err != nil {
 		t.Error("bad value or err:", v, err)
@@ -152,9 +153,31 @@ func TestDateTimeScanValue(t *testing.T) {
 	assertNullDateTime(t, wrong, "scanned wrong")
 }
 
+func TestDateTimeString(t *testing.T) {
+	dt := DateTimeFrom(dateTimeValue)
+	assert.Equal(t, "2012-12-21T21:21:21+0000", dt.String())
+
+	null := DateTime{}
+	assert.Equal(t, "", null.String())
+}
+
+func TestDateTimeIsZero(t *testing.T) {
+	dt := DateTimeFrom(dateTimeValue)
+	assert.False(t, dt.IsZero())
+
+	blank := DateTime{}
+	assert.True(t, blank.IsZero())
+
+	empty := NewDateTime(time.Time{}, true)
+	assert.False(t, empty.IsZero())
+
+	null := DateTimeFromPtr(nil)
+	assert.True(t, null.IsZero())
+}
+
 func assertDateTime(t *testing.T, ti DateTime, from string) {
-	if !ti.Time.Equal(dateTimeValue) {
-		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, dateTimeValue)
+	if !ti.Data.Equal(dateTimeValue) {
+		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Data, dateTimeValue)
 	}
 	if !ti.Valid {
 		t.Error(from, "is invalid, but should be valid")

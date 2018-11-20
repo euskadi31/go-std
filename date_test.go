@@ -4,165 +4,167 @@ import (
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
-	dateString    = "2012-12-21"
-	dateJSON      = []byte(`"` + dateString + `"`)
-	nullDateJSON  = []byte(`null`)
-	dateValue, _  = time.Parse(dateFormat, dateString)
-	badDateObject = []byte(`{"hello": "world"}`)
+	dateString   = "2012-12-21"
+	dateJSON     = []byte(`"` + dateString + `"`)
+	nullDateJSON = []byte(`null`)
+	dateValue, _ = time.Parse(dateFormat, dateString)
 )
 
 func TestUnmarshalDateJSON(t *testing.T) {
 	var ti Date
 	err := json.Unmarshal(dateJSON, &ti)
-	maybePanic(err)
-	assertDate(t, ti, "UnmarshalJSON() json")
+	assert.NoError(t, err)
+	assert.Equal(t, dateValue, ti.Data)
 
 	var null Date
 	err = json.Unmarshal(nullDateJSON, &null)
-	maybePanic(err)
-	assertNullDate(t, null, "null time json")
+	assert.NoError(t, err)
+	assert.False(t, null.Valid)
 
 	var invalid Date
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*time.ParseError); !ok {
-		t.Errorf("expected json.SyntaxError, not %T", err)
-	}
-	assertNullDate(t, invalid, "invalid from object json")
+	assert.Error(t, err)
+	assert.False(t, invalid.Valid)
 
 	var bad Date
 	err = json.Unmarshal(badObject, &bad)
-	if err == nil {
-		t.Errorf("expected error: bad object")
-	}
-	assertNullDate(t, bad, "bad from object json")
+	assert.Error(t, err)
+	assert.False(t, bad.Valid)
 
 	var wrongType Date
 	err = json.Unmarshal(intJSON, &wrongType)
-	if err == nil {
-		t.Errorf("expected error: wrong type JSON")
-	}
-	assertNullDate(t, wrongType, "wrong type object json")
+	assert.Error(t, err)
+	assert.False(t, wrongType.Valid)
 }
 
 func TestUnmarshalDateText(t *testing.T) {
 	ti := DateFrom(dateValue)
 	txt, err := ti.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, txt, dateString, "marshal text")
+	assert.NoError(t, err)
+	assert.Equal(t, dateString, string(txt))
 
 	var unmarshal Date
 	err = unmarshal.UnmarshalText(txt)
-	maybePanic(err)
-	assertDate(t, unmarshal, "unmarshal text")
+	assert.NoError(t, err)
+	assert.Equal(t, dateValue, unmarshal.Data)
 
 	var null Date
 	err = null.UnmarshalText(nullDateJSON)
-	maybePanic(err)
-	assertNullDate(t, null, "unmarshal null text")
+	assert.NoError(t, err)
+	assert.False(t, null.Valid)
+
 	txt, err = null.MarshalText()
-	maybePanic(err)
-	assertJSONEquals(t, txt, string(nullDateJSON), "marshal null text")
+	assert.NoError(t, err)
+	assert.Equal(t, []byte{}, txt)
 
 	var invalid Date
 	err = invalid.UnmarshalText([]byte("hello world"))
-	if err == nil {
-		t.Error("expected error")
-	}
-	assertNullDate(t, invalid, "bad string")
+	assert.Error(t, err)
+	assert.False(t, invalid.Valid)
 }
 
 func TestMarshalDate(t *testing.T) {
 	dt := Date{}
 	data, err := json.Marshal(dt)
-	maybePanic(err)
-	assertJSONEquals(t, data, string(nullDateJSON), "null json marshal")
+	assert.NoError(t, err)
+	assert.JSONEq(t, string(nullDateJSON), string(data))
 
 	ti := DateFrom(dateValue)
 	data, err = json.Marshal(ti)
-	maybePanic(err)
-	assertJSONEquals(t, data, string(dateJSON), "non-empty json marshal")
+	assert.NoError(t, err)
+	assert.JSONEq(t, string(dateJSON), string(data))
 
 	ti.Valid = false
 	data, err = json.Marshal(ti)
-	maybePanic(err)
-	assertJSONEquals(t, data, string(nullDateJSON), "null json marshal")
+	assert.NoError(t, err)
+	assert.JSONEq(t, string(nullDateJSON), string(data))
 }
 
 func TestDateFrom(t *testing.T) {
 	ti := DateFrom(dateValue)
-	assertDate(t, ti, "DateFrom() time.Time")
+	assert.True(t, ti.Valid)
+	assert.Equal(t, dateValue, ti.Data)
 }
 
 func TestDateFromPtr(t *testing.T) {
 	ti := DateFromPtr(&dateValue)
-	assertDate(t, ti, "DateFromPtr() time")
+	assert.True(t, ti.Valid)
+	assert.Equal(t, dateValue, ti.Data)
 
 	null := DateFromPtr(nil)
-	assertNullDate(t, null, "DateFromPtr(nil)")
+	assert.False(t, null.Valid)
 }
 
 func TestDateSetValid(t *testing.T) {
 	var ti time.Time
 	change := NewDate(ti, false)
-	assertNullDate(t, change, "SetValid()")
+	assert.False(t, change.Valid)
+
 	change.SetValid(dateValue)
-	assertDate(t, change, "SetValid()")
+	assert.True(t, change.Valid)
+	assert.Equal(t, dateValue, change.Data)
 }
 
 func TestDatePointer(t *testing.T) {
 	ti := DateFrom(dateValue)
 	ptr := ti.Ptr()
-	if *ptr != dateValue {
-		t.Errorf("bad %s time: %#v ≠ %v\n", "pointer", ptr, dateValue)
-	}
+	assert.Equal(t, dateValue, *ptr)
 
 	var nt time.Time
 	null := NewDate(nt, false)
 	ptr = null.Ptr()
-	if ptr != nil {
-		t.Errorf("bad %s time: %#v ≠ %s\n", "nil pointer", ptr, "nil")
-	}
+	assert.Nil(t, ptr)
 }
 
 func TestDateScanValue(t *testing.T) {
 	var ti Date
 	err := ti.Scan(dateValue)
-	maybePanic(err)
-	assertDate(t, ti, "scanned time")
-	if v, err := ti.Value(); v != dateValue || err != nil {
-		t.Error("bad value or err:", v, err)
-	}
+	assert.NoError(t, err)
+	assert.True(t, ti.Valid)
+	assert.Equal(t, dateValue, ti.Data)
+
+	v, err := ti.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, dateValue, v)
 
 	var null Date
 	err = null.Scan(nil)
-	maybePanic(err)
-	assertNullDate(t, null, "scanned null")
-	if v, err := null.Value(); v != nil || err != nil {
-		t.Error("bad value or err:", v, err)
-	}
+	assert.NoError(t, err)
+	assert.False(t, null.Valid)
+
+	v, err = null.Value()
+	assert.NoError(t, err)
+	assert.Nil(t, v)
 
 	var wrong Date
 	err = wrong.Scan(int64(42))
-	if err == nil {
-		t.Error("expected error")
-	}
-	assertNullDate(t, wrong, "scanned wrong")
+	assert.Error(t, err)
+	assert.False(t, wrong.Valid)
 }
 
-func assertDate(t *testing.T, ti Date, from string) {
-	if !ti.Time.Equal(dateValue) {
-		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, dateValue)
-	}
-	if !ti.Valid {
-		t.Error(from, "is invalid, but should be valid")
-	}
+func TestDateString(t *testing.T) {
+	dt := DateFrom(dateValue)
+	assert.Equal(t, "2012-12-21", dt.String())
+
+	null := Date{}
+	assert.Equal(t, "", null.String())
 }
 
-func assertNullDate(t *testing.T, ti Date, from string) {
-	if ti.Valid {
-		t.Error(from, "is valid, but should be invalid")
-	}
+func TestDateIsZero(t *testing.T) {
+	dt := DateFrom(dateValue)
+	assert.False(t, dt.IsZero())
+
+	blank := Date{}
+	assert.True(t, blank.IsZero())
+
+	empty := NewDate(time.Time{}, true)
+	assert.False(t, empty.IsZero())
+
+	null := DateFromPtr(nil)
+	assert.True(t, null.IsZero())
 }

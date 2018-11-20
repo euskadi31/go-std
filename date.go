@@ -3,7 +3,6 @@ package std
 import (
 	"database/sql/driver"
 	"fmt"
-	"reflect"
 	"time"
 )
 
@@ -14,7 +13,7 @@ const dateFormat = "2006-01-02"
 // It will marshal to null if null.
 // swagger:strfmt date-time
 type Date struct {
-	Time  time.Time
+	Data  time.Time
 	Valid bool
 }
 
@@ -24,7 +23,7 @@ func (t *Date) Scan(value interface{}) error {
 
 	switch x := value.(type) {
 	case time.Time:
-		t.Time = x
+		t.Data = x
 	case nil:
 		t.Valid = false
 		return nil
@@ -43,20 +42,20 @@ func (t Date) Value() (driver.Value, error) {
 		return nil, nil
 	}
 
-	return t.Time, nil
+	return t.Data, nil
 }
 
 // NewDate creates a new Date.
 func NewDate(t time.Time, valid bool) Date {
 	return Date{
-		Time:  t,
+		Data:  t,
 		Valid: valid,
 	}
 }
 
 // DateFrom creates a new Time that will always be valid.
 func DateFrom(t time.Time) Date {
-	return NewDate(t, true)
+	return NewDate(t, !t.IsZero())
 }
 
 // DateFromPtr creates a new Date that will be null if t is nil.
@@ -71,22 +70,22 @@ func DateFromPtr(t *time.Time) Date {
 // MarshalText implement the json.Marshaler interface
 func (t Date) MarshalText() ([]byte, error) {
 	if !t.Valid {
-		return nullType, nil
+		return []byte{}, nil
 	}
 
-	return []byte(t.Time.Format(dateFormat)), nil
+	return []byte(t.Data.Format(dateFormat)), nil
 }
 
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this time is null.
 func (t Date) MarshalJSON() ([]byte, error) {
-	if t.Time.IsZero() {
+	if !t.Valid {
 		return nullType, nil
 	}
 
 	b, _ := t.MarshalText()
 
-	if reflect.DeepEqual(b, nullType) {
+	if len(b) == 0 {
 		return nullType, nil
 	}
 
@@ -115,13 +114,13 @@ func (t *Date) UnmarshalText(b []byte) error {
 	var err error
 
 	if str == "" || str == "null" {
-		t.Time = time.Time{}
+		t.Data = time.Time{}
 		t.Valid = false
 
 		return nil
 	}
 
-	t.Time, err = time.Parse(dateFormat, str)
+	t.Data, err = time.Parse(dateFormat, str)
 
 	if err != nil {
 		t.Valid = false
@@ -134,7 +133,7 @@ func (t *Date) UnmarshalText(b []byte) error {
 
 // SetValid changes this Time's value and sets it to be non-null.
 func (t *Date) SetValid(v time.Time) {
-	t.Time = v
+	t.Data = v
 	t.Valid = true
 }
 
@@ -144,5 +143,20 @@ func (t Date) Ptr() *time.Time {
 		return nil
 	}
 
-	return &t.Time
+	return &t.Data
+}
+
+// IsZero reports whether t represents the zero time instant,
+// January 1, year 1, 00:00:00 UTC.
+func (t Date) IsZero() bool {
+	return !t.Valid
+}
+
+// String implements fmt.Stringer interface
+func (t Date) String() string {
+	if !t.Valid {
+		return ""
+	}
+
+	return t.Data.Format(dateFormat)
 }

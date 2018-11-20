@@ -1,7 +1,7 @@
 package std
 
 import (
-	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -12,16 +12,15 @@ import (
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
 type Int struct {
-	sql.NullInt64
+	Data  int64
+	Valid bool // Valid is true if Int64 is not NULL
 }
 
 // NewInt creates a new Int
 func NewInt(i int64, valid bool) Int {
 	return Int{
-		NullInt64: sql.NullInt64{
-			Int64: i,
-			Valid: valid,
-		},
+		Data:  i,
+		Valid: valid,
 	}
 }
 
@@ -35,7 +34,29 @@ func IntFromPtr(i *int64) Int {
 	if i == nil {
 		return NewInt(0, false)
 	}
+
 	return NewInt(*i, true)
+}
+
+// Scan implements the Scanner interface.
+func (i *Int) Scan(value interface{}) error {
+	if value == nil {
+		i.Data, i.Valid = 0, false
+		return nil
+	}
+
+	i.Valid = true
+
+	return convertAssign(&i.Data, value)
+}
+
+// Value implements the driver Valuer interface.
+func (i Int) Value() (driver.Value, error) {
+	if !i.Valid {
+		return nil, nil
+	}
+
+	return i.Data, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -51,16 +72,16 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	switch v.(type) {
 	case float64:
 		// Unmarshal again, directly to int64, to avoid intermediate float64
-		err = json.Unmarshal(data, &i.Int64)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &i.NullInt64)
+		err = json.Unmarshal(data, &i.Data)
 	case nil:
 		i.Valid = false
 		return nil
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int", reflect.TypeOf(v).Name())
 	}
+
 	i.Valid = err == nil
+
 	return err
 }
 
@@ -71,11 +92,15 @@ func (i *Int) UnmarshalText(text []byte) error {
 	str := string(text)
 	if str == "" || str == "null" {
 		i.Valid = false
+
 		return nil
 	}
+
 	var err error
-	i.Int64, err = strconv.ParseInt(string(text), 10, 64)
+
+	i.Data, err = strconv.ParseInt(string(text), 10, 64)
 	i.Valid = err == nil
+
 	return err
 }
 
@@ -85,7 +110,8 @@ func (i Int) MarshalJSON() ([]byte, error) {
 	if !i.Valid {
 		return []byte("null"), nil
 	}
-	return []byte(strconv.FormatInt(i.Int64, 10)), nil
+
+	return []byte(strconv.FormatInt(i.Data, 10)), nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
@@ -94,12 +120,13 @@ func (i Int) MarshalText() ([]byte, error) {
 	if !i.Valid {
 		return []byte{}, nil
 	}
-	return []byte(strconv.FormatInt(i.Int64, 10)), nil
+
+	return []byte(strconv.FormatInt(i.Data, 10)), nil
 }
 
 // SetValid changes this Int's value and also sets it to be non-null.
 func (i *Int) SetValid(n int64) {
-	i.Int64 = n
+	i.Data = n
 	i.Valid = true
 }
 
@@ -108,11 +135,21 @@ func (i Int) Ptr() *int64 {
 	if !i.Valid {
 		return nil
 	}
-	return &i.Int64
+
+	return &i.Data
 }
 
 // IsZero returns true for invalid Ints, for future omitempty support (Go 1.4?)
 // A non-null Int with a 0 value will not be considered zero.
 func (i Int) IsZero() bool {
 	return !i.Valid
+}
+
+// String implements fmt.Stringer interface
+func (i Int) String() string {
+	if !i.Valid {
+		return ""
+	}
+
+	return strconv.Itoa(int(i.Data))
 }

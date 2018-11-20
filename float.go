@@ -1,7 +1,7 @@
 package std
 
 import (
-	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -12,16 +12,15 @@ import (
 // It does not consider zero values to be null.
 // It will decode to null, not zero, if null.
 type Float struct {
-	sql.NullFloat64
+	Data  float64
+	Valid bool // Valid is true if Float64 is not NULL
 }
 
 // NewFloat creates a new Float
 func NewFloat(f float64, valid bool) Float {
 	return Float{
-		NullFloat64: sql.NullFloat64{
-			Float64: f,
-			Valid:   valid,
-		},
+		Data:  f,
+		Valid: valid,
 	}
 }
 
@@ -35,7 +34,30 @@ func FloatFromPtr(f *float64) Float {
 	if f == nil {
 		return NewFloat(0, false)
 	}
+
 	return NewFloat(*f, true)
+}
+
+// Scan implements the Scanner interface.
+func (f *Float) Scan(value interface{}) error {
+	if value == nil {
+		f.Data, f.Valid = 0, false
+
+		return nil
+	}
+
+	f.Valid = true
+
+	return convertAssign(&f.Data, value)
+}
+
+// Value implements the driver Valuer interface.
+func (f Float) Value() (driver.Value, error) {
+	if !f.Valid {
+		return nil, nil
+	}
+
+	return f.Data, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -50,9 +72,7 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	}
 	switch x := v.(type) {
 	case float64:
-		f.Float64 = float64(x)
-	case map[string]interface{}:
-		err = json.Unmarshal(data, &f.NullFloat64)
+		f.Data = float64(x)
 	case nil:
 		f.Valid = false
 		return nil
@@ -73,7 +93,7 @@ func (f *Float) UnmarshalText(text []byte) error {
 		return nil
 	}
 	var err error
-	f.Float64, err = strconv.ParseFloat(string(text), 64)
+	f.Data, err = strconv.ParseFloat(string(text), 64)
 	f.Valid = err == nil
 	return err
 }
@@ -84,7 +104,7 @@ func (f Float) MarshalJSON() ([]byte, error) {
 	if !f.Valid {
 		return []byte("null"), nil
 	}
-	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
+	return []byte(strconv.FormatFloat(f.Data, 'f', -1, 64)), nil
 }
 
 // MarshalText implements encoding.TextMarshaler.
@@ -93,12 +113,12 @@ func (f Float) MarshalText() ([]byte, error) {
 	if !f.Valid {
 		return []byte{}, nil
 	}
-	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
+	return []byte(strconv.FormatFloat(f.Data, 'f', -1, 64)), nil
 }
 
 // SetValid changes this Float's value and also sets it to be non-null.
 func (f *Float) SetValid(n float64) {
-	f.Float64 = n
+	f.Data = n
 	f.Valid = true
 }
 
@@ -107,11 +127,20 @@ func (f Float) Ptr() *float64 {
 	if !f.Valid {
 		return nil
 	}
-	return &f.Float64
+	return &f.Data
 }
 
 // IsZero returns true for invalid Floats, for future omitempty support (Go 1.4?)
 // A non-null Float with a 0 value will not be considered zero.
 func (f Float) IsZero() bool {
 	return !f.Valid
+}
+
+// String implements fmt.Stringer interface
+func (f Float) String() string {
+	if !f.Valid {
+		return ""
+	}
+
+	return strconv.FormatFloat(f.Data, 'f', -1, 64)
 }

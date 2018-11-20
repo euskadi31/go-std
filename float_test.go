@@ -3,6 +3,8 @@ package std
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -33,17 +35,12 @@ func TestFloatFromPtr(t *testing.T) {
 func TestUnmarshalFloat(t *testing.T) {
 	var f Float
 	err := json.Unmarshal(floatJSON, &f)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertFloat(t, f, "float json")
-
-	var nf Float
-	err = json.Unmarshal(nullFloatJSON, &nf)
-	maybePanic(err)
-	assertFloat(t, nf, "sq.NullFloat64 json")
 
 	var null Float
 	err = json.Unmarshal(nullJSON, &null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullFloat(t, null, "null json")
 
 	var badType Float
@@ -63,43 +60,43 @@ func TestUnmarshalFloat(t *testing.T) {
 func TestTextUnmarshalFloat(t *testing.T) {
 	var f Float
 	err := f.UnmarshalText([]byte("1.2345"))
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertFloat(t, f, "UnmarshalText() float")
 
 	var blank Float
 	err = blank.UnmarshalText([]byte(""))
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullFloat(t, blank, "UnmarshalText() empty float")
 
 	var null Float
 	err = null.UnmarshalText([]byte("null"))
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullFloat(t, null, `UnmarshalText() "null"`)
 }
 
 func TestMarshalFloat(t *testing.T) {
 	f := FloatFrom(1.2345)
 	data, err := json.Marshal(f)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "1.2345", "non-empty json marshal")
 
 	// invalid values should be encoded as null
 	null := NewFloat(0, false)
 	data, err = json.Marshal(null)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "null", "null json marshal")
 }
 
 func TestMarshalFloatText(t *testing.T) {
 	f := FloatFrom(1.2345)
 	data, err := f.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "1.2345", "non-empty text marshal")
 
 	// invalid values should be encoded as null
 	null := NewFloat(0, false)
 	data, err = null.MarshalText()
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertJSONEquals(t, data, "", "null text marshal")
 }
 
@@ -144,18 +141,40 @@ func TestFloatSetValid(t *testing.T) {
 func TestFloatScan(t *testing.T) {
 	var f Float
 	err := f.Scan(1.2345)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertFloat(t, f, "scanned float")
 
 	var null Float
 	err = null.Scan(nil)
-	maybePanic(err)
+	assert.NoError(t, err)
 	assertNullFloat(t, null, "scanned null")
 }
 
+func TestFloatString(t *testing.T) {
+	f := FloatFrom(1.2345)
+	assert.Equal(t, "1.2345", f.String())
+
+	null := Float{}
+	assert.Equal(t, "", null.String())
+}
+
+func TestFloatValue(t *testing.T) {
+	i := FloatFrom(1.2345)
+
+	v, err := i.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1.2345), v.(float64))
+
+	null := Float{}
+
+	v, err = null.Value()
+	assert.NoError(t, err)
+	assert.Nil(t, v)
+}
+
 func assertFloat(t *testing.T, f Float, from string) {
-	if f.Float64 != 1.2345 {
-		t.Errorf("bad %s float: %f ≠ %f\n", from, f.Float64, 1.2345)
+	if f.Data != 1.2345 {
+		t.Errorf("bad %s float: %f ≠ %f\n", from, f.Data, 1.2345)
 	}
 	if !f.Valid {
 		t.Error(from, "is invalid, but should be valid")
@@ -165,5 +184,13 @@ func assertFloat(t *testing.T, f Float, from string) {
 func assertNullFloat(t *testing.T, f Float, from string) {
 	if f.Valid {
 		t.Error(from, "is valid, but should be invalid")
+	}
+}
+
+func BenchmarkFloatString(b *testing.B) {
+	f := FloatFrom(1567.5346456)
+
+	for n := 0; n < b.N; n++ {
+		_ = f.String()
 	}
 }
