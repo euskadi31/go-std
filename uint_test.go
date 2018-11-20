@@ -9,10 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	uintJSON = []byte(`12345`)
-)
-
 func TestUintFrom(t *testing.T) {
 	i := UintFrom(12345)
 	assertUint(t, i, "UintFrom()")
