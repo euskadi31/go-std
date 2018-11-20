@@ -186,3 +186,11 @@ func assertNullFloat(t *testing.T, f Float, from string) {
 		t.Error(from, "is valid, but should be invalid")
 	}
 }
+
+func BenchmarkFloatString(b *testing.B) {
+	f := FloatFrom(1567.5346456)
+
+	for n := 0; n < b.N; n++ {
+		_ = f.String()
+	}
+}

@@ -152,6 +152,11 @@ func TestStringScan(t *testing.T) {
 	err = null.Scan(nil)
 	assert.NoError(t, err)
 	assert.False(t, null.Valid)
+
+	err = str.Scan([]byte("test"))
+	assert.NoError(t, err)
+	assert.True(t, str.Valid)
+	assert.Equal(t, "test", str.Data)
 }
 
 func TestStringString(t *testing.T) {

@@ -20,6 +20,7 @@ Types
 - `std.Float`: Nullable float64
 - `std.String`: Nullable string
 - `std.Int`: Nullable int64
+- `std.Uint`: Nullable uint64
 - `std.Time`: Nullable Time
 - `std.DateTime`: Nullable Time with ISO8601 format
 - `std.Date`: Nullable Time with ISO8601 (yyyy-mm-dd) format
