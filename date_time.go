@@ -27,6 +27,7 @@ func (t *DateTime) Scan(value interface{}) error {
 	case time.Time:
 		t.Data = x
 	case nil:
+		t.Data = time.Time{}
 		t.Valid = false
 		return nil
 	default:
