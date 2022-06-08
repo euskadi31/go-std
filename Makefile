@@ -25,5 +25,12 @@ cover: test
 	@echo ""
 	@go tool cover -func ./coverage.out
 
-travis:
-	@go test -cover -covermode=count -coverprofile ./coverage.out ./...
+
+.PHONY: lint
+lint:
+ifeq (, $(shell which golangci-lint))
+	@echo "Install golangci-lint..."
+	@curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b ${GOPATH}/bin v1.46.2
+endif
+	@echo "lint..."
+	@golangci-lint run --timeout=300s ./...
