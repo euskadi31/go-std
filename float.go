@@ -16,7 +16,7 @@ type Float struct {
 	Valid bool // Valid is true if Float64 is not NULL
 }
 
-// NewFloat creates a new Float
+// NewFloat creates a new Float.
 func NewFloat(f float64, valid bool) Float {
 	return Float{
 		Data:  f,
@@ -65,21 +65,28 @@ func (f Float) Value() (driver.Value, error) {
 // 0 will not be considered a null Float.
 // It also supports unmarshalling a sql.NullFloat64.
 func (f *Float) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
+	var (
+		err error
+		v   interface{}
+	)
+
 	if err = json.Unmarshal(data, &v); err != nil {
-		return err
+		return fmt.Errorf("json: cannot unmarshal %s into Go value of type null.Float: %w", string(data), err)
 	}
+
 	switch x := v.(type) {
 	case float64:
 		f.Data = float64(x)
 	case nil:
 		f.Valid = false
+
 		return nil
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Float", reflect.TypeOf(v).Name())
 	}
+
 	f.Valid = err == nil
+
 	return err
 }
 
@@ -88,14 +95,19 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 // It will return an error if the input is not an integer, blank, or "null".
 func (f *Float) UnmarshalText(text []byte) error {
 	str := string(text)
+
 	if str == "" || str == "null" {
 		f.Valid = false
+
 		return nil
 	}
+
 	var err error
+
 	f.Data, err = strconv.ParseFloat(string(text), 64)
 	f.Valid = err == nil
-	return err
+
+	return err // nolint: wrapcheck
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -104,6 +116,7 @@ func (f Float) MarshalJSON() ([]byte, error) {
 	if !f.Valid {
 		return []byte("null"), nil
 	}
+
 	return []byte(strconv.FormatFloat(f.Data, 'f', -1, 64)), nil
 }
 
@@ -113,6 +126,7 @@ func (f Float) MarshalText() ([]byte, error) {
 	if !f.Valid {
 		return []byte{}, nil
 	}
+
 	return []byte(strconv.FormatFloat(f.Data, 'f', -1, 64)), nil
 }
 
@@ -127,6 +141,7 @@ func (f Float) Ptr() *float64 {
 	if !f.Valid {
 		return nil
 	}
+
 	return &f.Data
 }
 
@@ -136,7 +151,7 @@ func (f Float) IsZero() bool {
 	return !f.Valid
 }
 
-// String implements fmt.Stringer interface
+// String implements fmt.Stringer interface.
 func (f Float) String() string {
 	if !f.Valid {
 		return ""

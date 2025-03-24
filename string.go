@@ -28,7 +28,7 @@ func StringFromPtr(s *string) String {
 	return NewString(*s, true)
 }
 
-// NewString creates a new String
+// NewString creates a new String.
 func NewString(s string, valid bool) String {
 	return String{
 		Data:  s,
@@ -40,6 +40,7 @@ func NewString(s string, valid bool) String {
 func (s *String) Scan(value interface{}) error {
 	if value == nil {
 		s.Data, s.Valid = "", false
+
 		return nil
 	}
 
@@ -61,10 +62,13 @@ func (s *String) Value() (driver.Value, error) {
 // It supports string and null input. Blank string input does not produce a null String.
 // It also supports unmarshalling a sql.NullString.
 func (s *String) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
+	var (
+		err error
+		v   interface{}
+	)
+
 	if err = json.Unmarshal(data, &v); err != nil {
-		return err
+		return fmt.Errorf("json: cannot unmarshal %s into Go value of type null.String: %w", string(data), err)
 	}
 
 	switch x := v.(type) {
@@ -90,7 +94,7 @@ func (s String) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 
-	return json.Marshal(s.Data)
+	return json.Marshal(s.Data) // nolint: wrapcheck
 }
 
 // MarshalText implements encoding.TextMarshaler.
@@ -132,7 +136,7 @@ func (s String) IsZero() bool {
 	return !s.Valid
 }
 
-// String implements fmt.Stringer interface
+// String implements fmt.Stringer interface.
 func (s String) String() string {
 	return s.Data
 }

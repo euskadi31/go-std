@@ -16,7 +16,7 @@ type Int struct {
 	Valid bool // Valid is true if Int64 is not NULL
 }
 
-// NewInt creates a new Int
+// NewInt creates a new Int.
 func NewInt(i int64, valid bool) Int {
 	return Int{
 		Data:  i,
@@ -42,6 +42,7 @@ func IntFromPtr(i *int64) Int {
 func (i *Int) Scan(value interface{}) error {
 	if value == nil {
 		i.Data, i.Valid = 0, false
+
 		return nil
 	}
 
@@ -64,17 +65,22 @@ func (i Int) Value() (driver.Value, error) {
 // 0 will not be considered a null Int.
 // It also supports unmarshalling a sql.NullInt64.
 func (i *Int) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
+	var (
+		err error
+		v   interface{}
+	)
+
 	if err = json.Unmarshal(data, &v); err != nil {
-		return err
+		return fmt.Errorf("json: cannot unmarshal %s into Go value of type null.Int: %w", string(data), err)
 	}
+
 	switch v.(type) {
 	case float64:
 		// Unmarshal again, directly to int64, to avoid intermediate float64
 		err = json.Unmarshal(data, &i.Data)
 	case nil:
 		i.Valid = false
+
 		return nil
 	default:
 		err = fmt.Errorf("json: cannot unmarshal %v into Go value of type null.Int", reflect.TypeOf(v).Name())
@@ -82,7 +88,7 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 
 	i.Valid = err == nil
 
-	return err
+	return err // nolint: wrapcheck
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
@@ -101,7 +107,7 @@ func (i *Int) UnmarshalText(text []byte) error {
 	i.Data, err = strconv.ParseInt(string(text), 10, 64)
 	i.Valid = err == nil
 
-	return err
+	return err // nolint: wrapcheck
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -145,7 +151,7 @@ func (i Int) IsZero() bool {
 	return !i.Valid
 }
 
-// String implements fmt.Stringer interface
+// String implements fmt.Stringer interface.
 func (i Int) String() string {
 	if !i.Valid {
 		return ""

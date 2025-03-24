@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// ISO8601 format
+// ISO8601 format.
 const dateFormat = "2006-01-02"
 
 // Date is a nullable time.Time with ISO8601 format. It supports SQL and JSON serialization.
@@ -26,6 +26,7 @@ func (t *Date) Scan(value interface{}) error {
 		t.Data = x
 	case nil:
 		t.Valid = false
+
 		return nil
 	default:
 		err = fmt.Errorf("std: cannot scan type %T into std.Date: %v", value, value)
@@ -33,7 +34,7 @@ func (t *Date) Scan(value interface{}) error {
 
 	t.Valid = err == nil
 
-	return err
+	return err // nolint: wrapcheck
 }
 
 // Value implements the driver Valuer interface.
@@ -67,7 +68,7 @@ func DateFromPtr(t *time.Time) Date {
 	return NewDate(*t, true)
 }
 
-// MarshalText implement the json.Marshaler interface
+// MarshalText implement the json.Marshaler interface.
 func (t Date) MarshalText() ([]byte, error) {
 	if !t.Valid {
 		return []byte{}, nil
@@ -108,9 +109,10 @@ func (t *Date) UnmarshalJSON(b []byte) error {
 	return t.UnmarshalText(b)
 }
 
-// UnmarshalText allows ISO8601Time to implement the TextUnmarshaler interface
+// UnmarshalText allows ISO8601Time to implement the TextUnmarshaler interface.
 func (t *Date) UnmarshalText(b []byte) error {
 	str := string(b)
+
 	var err error
 
 	if str == "" || str == "null" {
@@ -128,7 +130,7 @@ func (t *Date) UnmarshalText(b []byte) error {
 		t.Valid = true
 	}
 
-	return err
+	return err // nolint: wrapcheck
 }
 
 // SetValid changes this Time's value and sets it to be non-null.
@@ -152,7 +154,7 @@ func (t Date) IsZero() bool {
 	return !t.Valid
 }
 
-// String implements fmt.Stringer interface
+// String implements fmt.Stringer interface.
 func (t Date) String() string {
 	if !t.Valid {
 		return ""

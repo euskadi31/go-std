@@ -38,7 +38,7 @@ func (b Bool) Value() (driver.Value, error) {
 	return b.Data, nil
 }
 
-// NewBool creates a new Bool
+// NewBool creates a new Bool.
 func NewBool(b bool, valid bool) Bool {
 	return Bool{
 		Data:  b,
@@ -56,6 +56,7 @@ func BoolFromPtr(b *bool) Bool {
 	if b == nil {
 		return NewBool(false, false)
 	}
+
 	return NewBool(*b, true)
 }
 
@@ -64,11 +65,13 @@ func BoolFromPtr(b *bool) Bool {
 // 0 will not be considered a null Bool.
 // It also supports unmarshalling a sql.NullBool.
 func (b *Bool) UnmarshalJSON(data []byte) error {
-	var err error
-	var v interface{}
+	var (
+		err error
+		v   interface{}
+	)
 
 	if err = json.Unmarshal(data, &v); err != nil {
-		return err
+		return fmt.Errorf("json: cannot unmarshal %s into Go value of type null.Bool: %w", string(data), err)
 	}
 
 	switch x := v.(type) {
@@ -92,9 +95,11 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 // It will return an error if the input is not an integer, blank, or "null".
 func (b *Bool) UnmarshalText(text []byte) error {
 	str := string(text)
+	// nolint: goconst
 	switch str {
 	case "", "null":
 		b.Valid = false
+
 		return nil
 	case "true":
 		b.Data = true
@@ -102,9 +107,12 @@ func (b *Bool) UnmarshalText(text []byte) error {
 		b.Data = false
 	default:
 		b.Valid = false
+
 		return errors.New("invalid input:" + str)
 	}
+
 	b.Valid = true
+
 	return nil
 }
 
@@ -114,9 +122,11 @@ func (b Bool) MarshalJSON() ([]byte, error) {
 	if !b.Valid {
 		return []byte("null"), nil
 	}
+
 	if !b.Data {
 		return []byte("false"), nil
 	}
+
 	return []byte("true"), nil
 }
 
@@ -145,6 +155,7 @@ func (b Bool) Ptr() *bool {
 	if !b.Valid {
 		return nil
 	}
+
 	return &b.Data
 }
 
@@ -154,7 +165,7 @@ func (b Bool) IsZero() bool {
 	return !b.Valid
 }
 
-// String implements fmt.Stringer interface
+// String implements fmt.Stringer interface.
 func (b Bool) String() string {
 	if !b.Valid {
 		return ""

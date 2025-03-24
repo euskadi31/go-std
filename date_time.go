@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// ISO8601 format
+// ISO8601 format.
 const dateTimeFormat = "2006-01-02T15:04:05-0700"
 
 var nullType = []byte("null")
@@ -29,6 +29,7 @@ func (t *DateTime) Scan(value interface{}) error {
 	case nil:
 		t.Data = time.Time{}
 		t.Valid = false
+
 		return nil
 	default:
 		err = fmt.Errorf("std: cannot scan type %T into std.DateTime: %v", value, value)
@@ -36,7 +37,7 @@ func (t *DateTime) Scan(value interface{}) error {
 
 	t.Valid = err == nil
 
-	return err
+	return err // nolint: wrapcheck
 }
 
 // Value implements the driver Valuer interface.
@@ -70,7 +71,7 @@ func DateTimeFromPtr(t *time.Time) DateTime {
 	return NewDateTime(*t, true)
 }
 
-// MarshalText implement the json.Marshaler interface
+// MarshalText implement the json.Marshaler interface.
 func (t DateTime) MarshalText() ([]byte, error) {
 	if !t.Valid {
 		return []byte{}, nil
@@ -111,9 +112,10 @@ func (t *DateTime) UnmarshalJSON(b []byte) error {
 	return t.UnmarshalText(b)
 }
 
-// UnmarshalText allows ISO8601Time to implement the TextUnmarshaler interface
+// UnmarshalText allows ISO8601Time to implement the TextUnmarshaler interface.
 func (t *DateTime) UnmarshalText(b []byte) error {
 	str := string(b)
+
 	var err error
 
 	if str == "" || str == "null" {
@@ -131,7 +133,7 @@ func (t *DateTime) UnmarshalText(b []byte) error {
 		t.Valid = true
 	}
 
-	return err
+	return err // nolint: wrapcheck
 }
 
 // SetValid changes this Time's value and sets it to be non-null.
@@ -155,7 +157,7 @@ func (t DateTime) IsZero() bool {
 	return !t.Valid
 }
 
-// String implements fmt.Stringer interface
+// String implements fmt.Stringer interface.
 func (t DateTime) String() string {
 	if !t.Valid {
 		return ""
