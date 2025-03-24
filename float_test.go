@@ -2,6 +2,7 @@ package std
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +53,8 @@ func TestUnmarshalFloat(t *testing.T) {
 
 	var invalid Float
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
+	var syntaxErr *json.SyntaxError
+	if !errors.As(err, &syntaxErr) {
 		t.Errorf("expected json.SyntaxError, not %T", err)
 	}
 }

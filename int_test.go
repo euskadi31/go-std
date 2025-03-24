@@ -2,6 +2,7 @@ package std
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"strconv"
 	"testing"
@@ -53,9 +54,11 @@ func TestUnmarshalInt(t *testing.T) {
 
 	var invalid Int
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
+	var syntaxErr *json.SyntaxError
+	if !errors.As(err, &syntaxErr) {
 		t.Errorf("expected json.SyntaxError, not %T", err)
 	}
+
 	assertNullInt(t, invalid, "invalid json")
 }
 

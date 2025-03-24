@@ -2,6 +2,7 @@ package std
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -41,9 +42,11 @@ func TestUnmarshalTimeJSON(t *testing.T) {
 
 	var invalid Time
 	err = invalid.UnmarshalJSON(invalidJSON)
-	if _, ok := err.(*json.SyntaxError); !ok {
+	var syntaxErr *json.SyntaxError
+	if !errors.As(err, &syntaxErr) {
 		t.Errorf("expected json.SyntaxError, not %T", err)
 	}
+
 	assertNullTime(t, invalid, "invalid from object json")
 
 	var bad Time

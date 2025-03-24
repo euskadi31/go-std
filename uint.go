@@ -108,7 +108,7 @@ func (i *Uint) UnmarshalText(text []byte) error {
 	i.Data, err = strconv.ParseUint(string(text), 10, 64)
 	i.Valid = err == nil
 
-	return fmt.Errorf("invalid input: %s", str)
+	return err // nolint: wrapcheck
 }
 
 // MarshalJSON implements json.Marshaler.

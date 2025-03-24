@@ -55,7 +55,7 @@ func TestUnmarshalBool(t *testing.T) {
 
 	var invalid Bool
 	err = invalid.UnmarshalJSON(invalidJSON)
-	assert.EqualError(t, err, "invalid character ':' looking for beginning of value")
+	assert.EqualError(t, err, "json: cannot unmarshal :) into Go value of type null.Bool: invalid character ':' looking for beginning of value")
 }
 
 func TestTextUnmarshalBool(t *testing.T) {
